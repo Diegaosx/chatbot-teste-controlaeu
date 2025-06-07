@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { cn } from "../../../lib/utils" // Caminho corrigido
+import { cn } from "../../lib/utils.js"
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 

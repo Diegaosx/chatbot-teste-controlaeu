@@ -1,4 +1,4 @@
-import { cn } from "../lib/utils"
+import { cn } from "../lib/utils.js"
 import { TooltipProvider } from "../components/ui/tooltip"
 import { Inter } from "next/font/google"
 import type { ReactNode } from "react"
@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata = {
   title: "OpenAI and AI SDK Chatbot",
   description: "A simple chatbot built using the AI SDK and gpt-4o-mini.",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -21,5 +21,4 @@ export default function Layout({ children }: { children: ReactNode }) {
   )
 }
 
-
-import './globals.css'
+import "./globals.css"

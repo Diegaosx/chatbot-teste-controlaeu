@@ -31,16 +31,26 @@ export async function POST(req: Request) {
       body: JSON.stringify({ text: lastUserMessage, userId }),
     })
 
+    let detectorResult: any
     if (!detectorResponse.ok) {
-      const errorData = await detectorResponse.json()
-      console.error("Detector API Error:", errorData)
+      const errorText = await detectorResponse.text() // Read as text first
+      console.error("Detector API Error:", errorText)
       return NextResponse.json(
-        { error: "Failed to detect message type", details: errorData },
+        { error: "Failed to detect message type", details: errorText }, // Send raw text as details
         { status: detectorResponse.status },
       )
     }
+    try {
+      detectorResult = await detectorResponse.json() // Attempt to parse
+    } catch (jsonError) {
+      const errorText = await detectorResponse.text() // If parsing fails, get text again (or use already read text)
+      console.error("Detector API JSON parsing error:", jsonError, "Raw response:", errorText)
+      return NextResponse.json(
+        { error: "Invalid JSON response from detector API", details: errorText },
+        { status: 500 },
+      )
+    }
 
-    const detectorResult = await detectorResponse.json()
     const suggestedRoute = detectorResult.suggested_route
     const detectedTypes = detectorResult.detected_types || []
 
@@ -164,16 +174,25 @@ export async function POST(req: Request) {
         body: JSON.stringify({ text: lastUserMessage, userId }),
       })
 
+      let processorResult: any
       if (!processorResponse.ok) {
-        const errorData = await processorResponse.json()
-        console.error("Processor API Error:", errorData)
+        const errorText = await processorResponse.text() // Read as text first
+        console.error("Processor API Error:", errorText)
         return NextResponse.json(
-          { error: `Failed to process message with ${suggestedRoute}`, details: errorData },
+          { error: `Failed to process message with ${suggestedRoute}`, details: errorText },
           { status: processorResponse.status },
         )
       }
-
-      const processorResult = await processorResponse.json()
+      try {
+        processorResult = await processorResponse.json() // Attempt to parse
+      } catch (jsonError) {
+        const errorText = await processorResponse.text() // If parsing fails, get text again
+        console.error("Processor API JSON parsing error:", jsonError, "Raw response:", errorText)
+        return NextResponse.json(
+          { error: "Invalid JSON response from processor API", details: errorText },
+          { status: 500 },
+        )
+      }
 
       // Format the response based on the detected type
       if (detectedTypes.includes("FINANCIAL") && processorResult.results && processorResult.results.length > 0) {

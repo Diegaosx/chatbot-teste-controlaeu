@@ -19,6 +19,7 @@ import {
 import { Button } from "./ui/button"
 import { Input } from "./ui/input" // Re-introducing Input for the "Como Funciona" step 1
 import { Card, CardContent, CardTitle } from "./ui/card" // For structured messages
+import { FinancialCharts } from "./financial-charts" // Import the new component
 
 // Define message types for pre-defined buttons
 type ExampleMessage = {
@@ -326,7 +327,7 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
           </Card>
         )
       } else if (parsedContent.type === "report_summary") {
-        const { period, balance, top_categories, insights, whatsapp_text } = parsedContent.data
+        const { period, balance, top_categories, insights } = parsedContent.data // Removed whatsapp_text
         return (
           <Card className="w-full bg-white shadow-md rounded-lg p-4 text-left">
             <div className="flex items-center mb-2">
@@ -372,25 +373,8 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
                 ))}
               </>
             )}
-            {/* Placeholder for chart images */}
-            {period === "Últimos 7 dias" && (
-              <>
-                <img
-                  src="/images/whatsapp-chart1.png"
-                  alt="Gráfico de gastos dos últimos 7 dias"
-                  className="w-full h-auto mt-4 rounded-md"
-                />
-                <p className="text-xs text-gray-500 mt-1">Segue gráfico dos seus gastos dos últimos 7 dias 👇</p>
-                <img
-                  src="/images/whatsapp-chart2.png"
-                  alt="Gráfico de divisão de gastos por categoria"
-                  className="w-full h-auto mt-4 rounded-md"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Segue o gráfico da divisão dos seus gastos por categoria 👇
-                </p>
-              </>
-            )}
+            {/* Render dynamic charts */}
+            <FinancialCharts topCategories={top_categories} balance={balance} />
           </Card>
         )
       } else if (parsedContent.type === "text_response") {

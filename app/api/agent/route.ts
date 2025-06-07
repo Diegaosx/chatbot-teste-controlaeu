@@ -33,20 +33,23 @@ export async function POST(req: Request) {
 
     let detectorResult: any
     if (!detectorResponse.ok) {
-      const errorText = await detectorResponse.text() // Read as text first
-      console.error("Detector API Error:", errorText)
+      const errorText = await detectorResponse.text().catch(() => "Corpo da resposta vazio ou ilegível.") // Tenta ler o corpo, se falhar, usa mensagem padrão
+      console.error("Detector API Error:", detectorResponse.status, detectorResponse.statusText, errorText)
       return NextResponse.json(
-        { error: "Failed to detect message type", details: errorText }, // Send raw text as details
+        {
+          error: `Falha ao detectar tipo de mensagem (Status: ${detectorResponse.status})`,
+          details: errorText,
+        },
         { status: detectorResponse.status },
       )
     }
     try {
-      detectorResult = await detectorResponse.json() // Attempt to parse
+      detectorResult = await detectorResponse.json() // Tenta parsear
     } catch (jsonError) {
-      const errorText = await detectorResponse.text() // If parsing fails, get text again (or use already read text)
+      const errorText = await detectorResponse.text().catch(() => "Corpo da resposta vazio ou ilegível.")
       console.error("Detector API JSON parsing error:", jsonError, "Raw response:", errorText)
       return NextResponse.json(
-        { error: "Invalid JSON response from detector API", details: errorText },
+        { error: "Resposta JSON inválida da API do detector", details: errorText },
         { status: 500 },
       )
     }
@@ -176,20 +179,23 @@ export async function POST(req: Request) {
 
       let processorResult: any
       if (!processorResponse.ok) {
-        const errorText = await processorResponse.text() // Read as text first
-        console.error("Processor API Error:", errorText)
+        const errorText = await processorResponse.text().catch(() => "Corpo da resposta vazio ou ilegível.")
+        console.error("Processor API Error:", processorResponse.status, processorResponse.statusText, errorText)
         return NextResponse.json(
-          { error: `Failed to process message with ${suggestedRoute}`, details: errorText },
+          {
+            error: `Falha ao processar mensagem com ${suggestedRoute} (Status: ${processorResponse.status})`,
+            details: errorText,
+          },
           { status: processorResponse.status },
         )
       }
       try {
-        processorResult = await processorResponse.json() // Attempt to parse
+        processorResult = await processorResponse.json() // Tenta parsear
       } catch (jsonError) {
-        const errorText = await processorResponse.text() // If parsing fails, get text again
+        const errorText = await processorResponse.text().catch(() => "Corpo da resposta vazio ou ilegível.")
         console.error("Processor API JSON parsing error:", jsonError, "Raw response:", errorText)
         return NextResponse.json(
-          { error: "Invalid JSON response from processor API", details: errorText },
+          { error: "Resposta JSON inválida da API do processador", details: errorText },
           { status: 500 },
         )
       }

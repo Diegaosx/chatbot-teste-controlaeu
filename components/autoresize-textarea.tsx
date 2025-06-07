@@ -1,6 +1,6 @@
 "use client"
 
-import { cn } from "../lib/utils.js"
+import { cn } from "@/lib/utils"
 import { useRef, useEffect, type TextareaHTMLAttributes } from "react"
 
 interface AutoResizeTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange"> {

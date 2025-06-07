@@ -16,9 +16,9 @@ import {
   BarChart3Icon,
   LightbulbIcon,
 } from "lucide-react"
-import { Button } from "../ui/button"
-import { Input } from "../ui/input" // Re-introducing Input for the "Como Funciona" step 1
-import { Card, CardContent, CardTitle } from "../ui/card" // For structured messages
+import { Button } from "./ui/button"
+import { Input } from "./ui/input" // Re-introducing Input for the "Como Funciona" step 1
+import { Card, CardContent, CardTitle } from "./ui/card" // For structured messages
 
 // Define message types for pre-defined buttons
 type ExampleMessage = {

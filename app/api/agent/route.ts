@@ -45,7 +45,6 @@ export async function POST(req: Request) {
     const detectedTypes = detectorResult.detected_types || []
 
     let agentResponseData: any = null
-    const responseType = "text_response" // Default response type
 
     // Handle specific demo steps first
     if (lastUserMessage === "Demonstração") {
@@ -83,8 +82,7 @@ export async function POST(req: Request) {
             { name: "Jantar fora", amount: 67.0, percentage: 11.0, transactions: 1 },
           ],
           insights: ["Seus gastos aumentaram em 20% essa semana"],
-          whatsapp_text:
-            "📊 *RESUMO FINANCEIRO*\n📅 Período: *Últimos 7 dias*\n\n💰 *BALANÇO GERAL*\n📈 Receitas: *R$ 0,00*\n📉 Despesas: *R$ 632,00*\n💵 Saldo: *R$ -632,00*\n📊 Taxa de economia: *0%*",
+          // whatsapp_text is removed as client now renders charts
         },
       }
     } else if (lastUserMessage.includes("quero juntar 200000 para casa própria até 2027")) {
@@ -100,7 +98,7 @@ export async function POST(req: Request) {
             description: "gasolina no carro",
             amount: 150.0,
             date: "07/06/2025",
-            category: "Alimentação",
+            category: "Transporte", // Corrected category
             id: "655/2-2",
           },
         },
@@ -185,9 +183,9 @@ export async function POST(req: Request) {
             description: res.data.name || res.data.description,
             amount: res.data.amount,
             date: new Date(res.data.expense_date || res.data.income_date).toLocaleDateString("pt-BR"),
-            category: res.data.category_id ? (res.data.category_id === 5 ? "Contas" : "Geral") : "Desconhecida", // Placeholder for category mapping
+            category: res.data.category_name || "Desconhecida", // Use category_name if available
             id: res.data.id,
-            reminder: res.data.reminder || null, // Assuming reminder might come from API
+            reminder: res.data.reminder || null,
           },
         }))
       } else if (detectedTypes.includes("MONTHLY_GOALS") || detectedTypes.includes("GOALS")) {
@@ -195,14 +193,14 @@ export async function POST(req: Request) {
           type: "goal_added",
           data: {
             description: processorResult.data.description,
-            monthlyValue: processorResult.data.monthlyValue,
+            monthlyValue: processorResult.data.monthlyValue || null, // Ensure all fields are passed
             totalValue: processorResult.data.totalValue,
             targetDate: processorResult.data.targetDate,
-            months: processorResult.data.months,
-            category: processorResult.data.category,
-            progress: processorResult.data.progress || 0, // Assuming progress might be in response
+            months: processorResult.data.months || null,
+            category: processorResult.data.category || null,
+            progress: processorResult.data.progress || 0,
             observation: processorResult.data.observation || null,
-            id: processorResult.data.id || Math.floor(Math.random() * 1000), // Placeholder ID
+            id: processorResult.data.id || Math.floor(Math.random() * 1000),
           },
         }
       } else if (detectedTypes.includes("REPORTS") && processorResult.report) {
@@ -210,10 +208,20 @@ export async function POST(req: Request) {
           type: "report_summary",
           data: {
             period: processorResult.report.period,
-            balance: processorResult.report.data.balance,
-            top_categories: processorResult.report.data.top_categories,
-            insights: processorResult.report.data.insights,
-            whatsapp_text: processorResult.whatsapp, // Use the pre-formatted whatsapp text if available
+            balance: {
+              income: processorResult.report.data.balance.income,
+              expenses: processorResult.report.data.balance.expenses,
+              net: processorResult.report.data.balance.net,
+              savings_rate: processorResult.report.data.balance.savings_rate,
+            },
+            top_categories: processorResult.report.data.top_categories.map((cat: any) => ({
+              name: cat.name,
+              amount: cat.amount,
+              percentage: cat.percentage,
+              transactions: cat.transactions,
+            })),
+            insights: processorResult.report.data.insights || [],
+            // whatsapp_text is removed as client now renders charts
           },
         }
       } else {

@@ -15,6 +15,7 @@ import {
   CalendarDaysIcon,
   BarChart3Icon,
   LightbulbIcon,
+  Loader2Icon,
 } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input" // Re-introducing Input for the "Como Funciona" step 1
@@ -25,7 +26,7 @@ import { FinancialCharts } from "./financial-charts" // Import the new component
 type ExampleMessage = {
   id: string
   text: string
-  type: "initial" | "expense_input" | "report_input" | "mixed_input" | "goal_input" | "continue"
+  type: "initial" | "expense_input" | "report_input" | "mixed_input" | "goal_input" | "continue" | "income_input"
   nextStep?: string // For sequential flow
 }
 
@@ -34,14 +35,22 @@ const initialExampleMessages: ExampleMessage[] = [
 ]
 
 const step1ExampleMessages: ExampleMessage[] = [
-  { id: "expense_example", text: "camisa 110", type: "expense_input", nextStep: "step2_report_input" },
+  { id: "expense_example_1", text: "camisa 110", type: "expense_input", nextStep: "step2_report_input" },
+  { id: "expense_example_2", text: "almoço 35", type: "expense_input", nextStep: "step2_report_input" },
+  { id: "income_example_1", text: "recebi 500 de salário", type: "income_input", nextStep: "step2_report_input" },
   { id: "continue_step1", text: "Continuar", type: "continue", nextStep: "step2_report_input" },
 ]
 
 const step2ExampleMessages: ExampleMessage[] = [
   {
-    id: "report_example",
+    id: "report_example_1",
     text: "quanto eu gastei nos últimos dias?",
+    type: "report_input",
+    nextStep: "step3_mixed_input",
+  },
+  {
+    id: "report_example_2",
+    text: "meu balanço do mês passado",
     type: "report_input",
     nextStep: "step3_mixed_input",
   },
@@ -50,8 +59,14 @@ const step2ExampleMessages: ExampleMessage[] = [
 
 const step3ExampleMessages: ExampleMessage[] = [
   {
-    id: "mixed_example",
+    id: "mixed_example_1",
     text: "quero juntar 200000 para casa própria até 2027 e já tenho 20%, gastei 100 com lanches, gasolina no carro 150 recebi 300 serviço pessoal e quero que me lembre de acordar amanhã 9hs",
+    type: "mixed_input",
+    nextStep: "step4_goal_input",
+  },
+  {
+    id: "mixed_example_2",
+    text: "comprei um livro por 60, recebi 150 de freela e quero uma meta de 5000 para viagem em 6 meses",
     type: "mixed_input",
     nextStep: "step4_goal_input",
   },
@@ -60,8 +75,14 @@ const step3ExampleMessages: ExampleMessage[] = [
 
 const step4ExampleMessages: ExampleMessage[] = [
   {
-    id: "goal_example",
+    id: "goal_example_1",
     text: "preciso de uma meta pra juntar 111 mil para trocar moto e já tenho 2%",
+    type: "goal_input",
+    nextStep: "end_demo",
+  },
+  {
+    id: "goal_example_2",
+    text: "quero economizar 500 por mês para um novo celular",
     type: "goal_input",
     nextStep: "end_demo",
   },
@@ -104,9 +125,10 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
     // Advance step if it's a specific demo message
     if (messageType === "initial" && messageText === "Demonstração") {
       setCurrentStep("step1_expense_input")
-    } else if (messageType === "expense_input" && messageText === "camisa 110") {
+    } else if (messageType === "expense_input" || messageType === "income_input") {
+      // If it's an expense or income input, move to step 2
       setCurrentStep("step2_report_input")
-    } else if (messageType === "report_input" && messageText === "quanto eu gastei nos últimos dias?") {
+    } else if (messageType === "report_input") {
       setCurrentStep("step3_mixed_input")
     } else if (messageType === "mixed_input") {
       setCurrentStep("step4_goal_input")
@@ -126,7 +148,11 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
   const handleInputSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (currentInput.trim() === "") return
-    await handleSendMessage(currentInput, "expense_input") // Treat as expense input for step 1
+    // Determine type based on content for input field, default to expense_input for simplicity in demo
+    const messageType: ExampleMessage["type"] = currentInput.toLowerCase().includes("recebi")
+      ? "income_input"
+      : "expense_input"
+    await handleSendMessage(currentInput, messageType)
     setCurrentInput("")
   }
 
@@ -417,12 +443,14 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
               onChange={(e) => setCurrentInput(e.target.value)}
               placeholder="Exemplo: ifood 44"
               className="flex-grow border-whatsapp-green focus:border-whatsapp-green focus:ring-whatsapp-green"
+              disabled={isLoading} // Desabilitar input durante o carregamento
             />
             <Button
               type="submit"
               className="bg-whatsapp-green hover:bg-whatsapp-green/90 text-white rounded-full p-2 size-10"
+              disabled={isLoading} // Desabilitar botão durante o carregamento
             >
-              <ArrowUpIcon size={20} />
+              {isLoading ? <Loader2Icon className="animate-spin" size={20} /> : <ArrowUpIcon size={20} />}
             </Button>
           </form>
         )}
@@ -436,7 +464,7 @@ export function ChatForm({ className, ...props }: React.ComponentProps<"form">) 
                 ? "bg-controla-orange hover:bg-controla-orange/90 text-white"
                 : "bg-whatsapp-green hover:bg-whatsapp-green/90 text-white",
             )}
-            disabled={isLoading}
+            disabled={isLoading} // Desabilitar botões de exemplo durante o carregamento
           >
             {msg.text}
           </Button>
